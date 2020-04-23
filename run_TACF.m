@@ -4,17 +4,18 @@ setup_paths;
 params.visualization = 1;
 
 %% New add-on
-params.position_attention_avail = 1;
-params.pos_lr = 0.02;
-params.channel_attention_avail = 1;
-params.chann_wlr = 0.022;
+% % Spatiotemporal attention available
+params.st_att = 1;
+% % Dimensional attention available
+params.dim_att = 1;
+params.dim_wlr = 0.022;
 params.dim_act_threshold = 0.3;
-% params.temporal_attention_avail = 1;
-params.two_feature = 1;
-% contextual attention
+% % Contextual attention available
 params.context_att = 1;
 % learning intervals for context similarity /frame
 params.bgl_interv = 4;
+params.two_feature = 1;
+params.pos_lr = 0.02;
 
 params.hog_cell_size = 4;
 params.fixed_area = 200^2;   % 150^2           % standard area to which we resize the target

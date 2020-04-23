@@ -10,13 +10,13 @@ else
     feat_num = 1;
     feat_dim{1} = p.feat1dim;
 end
-dim_attention_avail = p.channel_attention_avail;
+dim_att = p.dim_att;
 dim_act_threshold = p.dim_act_threshold;
-if dim_attention_avail
-    dim_wlr = p.chann_wlr;
+if dim_att
+    dim_wlr = p.dim_wlr;
 end
-position_attention_avail = p.position_attention_avail;
-if position_attention_avail
+st_att = p.st_att;
+if st_att
     pos_lr = p.pos_lr;
 end
 
@@ -120,7 +120,7 @@ for frame = 1:num_frames
         end
         likelihood_map = max(likelihood_map, 0.1);
         hann_window =  hann_window_cosine .* likelihood_map;
-        if ~dim_attention_avail
+        if ~dim_att
             for M = 1:feat_num
                 z{M} = bsxfun(@times, get_features(im_patch_cf, features, global_feat_params, feat_type{M}, layerInd{M}), hann_window);
                 z_f{M} = double(fft2(z{M}));
@@ -129,8 +129,6 @@ for frame = 1:num_frames
                         kz_f{M} = gaussian_correlation(z_f{M}, model_x_f{M}, p.tran_sigma{M});
                     case 'polynomial'
                         kz_f{M} = polynomial_correlation(z_f{M}, model_x_f{M}, p.polya{M}, p.polyb{M});
-                    case 'linear'
-                        kz_f{M} = sum(z_f{M} .* conj(model_x_f{M}), 3) / numel(z_f{M});
                 end
             end
             response_cf{1} = real(ifft2(model_w_f{1} .* kz_f{1}));
@@ -155,18 +153,13 @@ for frame = 1:num_frames
                         for d = 1:feat_dim{M}
                             kz_f{M}(:,:,d) = polynomial_correlation(z_f{M}(:,:,d), model_x_f{M}(:,:,d), p.polya{M}, p.polyb{M});
                         end
-                    case 'linear'
-                        kz_f{M} = bsxfun(@times, z_f{M}, conj(model_x_f{M})) / prod(size_zf(1:2));
                 end
             end
             for M = 1:feat_num
                 response_cf_chann{M} = real(ifft2(model_w_f{M} .* kz_f{M}));
                 response_cf_ca{M}    = bsxfun(@times, response_cf_chann{M}, reshape(model_chann_w{M}, 1, 1, size(response_cf_chann{M},3)));
-                if position_attention_avail
+                if st_att
                     pa_map{M}   = pos_attention(response_cf_ca{M}, hann_window, frame, target_sz, trans_vec);
-                    if mod(frame,25) == 1
-                        testest = 1;
-                    end
                     if frame == 2
                         model_pa_map{M}  = pa_map{M};
                     else
@@ -196,8 +189,6 @@ for frame = 1:num_frames
                             kz_bf{feat_order}(:,:,j) = gaussian_correlation(z_bf{feat_order}(:,:,:,j), z_bf{feat_order}(:,:,:,j), p.tran_sigma{feat_order});
                         case 'polynomial'
                             kz_bf{feat_order}(:,:,j) = polynomial_correlation(z_bf{feat_order}(:,:,:,j), z_bf{feat_order}(:,:,:,j), p.polya{feat_order}, p.polyb{feat_order});
-                        case 'linear'
-                            kz_bf{feat_order} = bsxfun(@times, z_bf{feat_order} , conj(z_bf{feat_order})) / prod(size_zf(1:2));
                     end
                     response_context = real(ifft2(model_w_f{1} .* kz_bf{feat_order}(:,:,j)));
                     % Crop square search region (in feature pixels).
@@ -267,14 +258,13 @@ for frame = 1:num_frames
     end
     
     %% Train and Update Model
-    %% 中心样本 im_patch_fg
     obj = getSubwindow(im, pos, target_sz);
     im_patch_fg = getSubwindow(im, pos, p.norm_bg_area, bg_area);
     for M = 1:feat_num
         x{M} = bsxfun(@times, get_features(im_patch_fg, features, global_feat_params, feat_type{M}, layerInd{M}), hann_window_cosine);
         x_f{M} = double(fft2(x{M}));
         size_xf = size(x_f{M});
-        if dim_attention_avail
+        if dim_att
             switch p.kernel_type{M}
                 case 'gaussian'
                     for d = 1:feat_dim{M}
@@ -284,8 +274,6 @@ for frame = 1:num_frames
                     for d = 1:feat_dim{M}
                         k_f{M}(:,:,d) = polynomial_correlation(x_f{M}(:,:,d), x_f{M}(:,:,d), p.polya{M}, p.polyb{M});
                     end
-                case 'linear'
-                    k_f{M} = bsxfun(@times, x_f{M}, conj(x_f{M})) / prod(size_xf(1:2));
             end
         else
             switch p.kernel_type{M}
@@ -293,8 +281,6 @@ for frame = 1:num_frames
                     k_f{M} = gaussian_correlation(x_f{M}, x_f{M}, p.tran_sigma{M});
                 case 'polynomial'
                     k_f{M} = polynomial_correlation(x_f{M}, x_f{M}, p.polya{M}, p.polyb{M});
-                case 'linear'
-                    k_f{M} = sum(x_f{M} .* conj(x_f{M}), 3) / numel(x_f{M});
             end
         end
     end
@@ -321,8 +307,6 @@ for frame = 1:num_frames
                         for d = 1:feat_dim{ijk}
                             k_bf{ijk}(:,:,d,j) = polynomial_correlation(x_bf{ijk}(:,:,d,j), x_bf{ijk}(:,:,d,j), p.polya{ijk}, p.polyb{ijk});
                         end
-                    case 'linear'
-                        k_bf{ijk} = bsxfun(@times, x_bf{ijk}, conj(x_bf{ijk})) / prod(size_xf(1:2));
                 end
             end
             new_wf_num{1} = k_f{1} .* yf{1};
@@ -350,7 +334,7 @@ for frame = 1:num_frames
     end
     
     %% calculate per-channel feature weights
-    if dim_attention_avail
+    if dim_att
         for M = 1:feat_num
             if frame == 1
                 model_chann_w{M} = ones(1, feat_dim{M},'single');

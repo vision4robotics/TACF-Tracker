@@ -7,6 +7,7 @@ clc;
 type_of_assessment = 'UAV123_10fps';
 tracker_name = 'TACF';
 %% Load video information
+addpath(genpath('./UAV123_utils/'));
 seq = load_video_information(type_of_assessment);
 
 % main function
