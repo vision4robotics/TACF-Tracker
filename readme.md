@@ -6,9 +6,31 @@
 
 Matlab implementation of our Towards Robust Visual Tracking for Unmanned Aerial Vehicle with Tri-Attentional Correlation Filters (TACF) tracker.
 
+
+# Paper and Citation
+
+This paper has been accepted by IROS2020.
+
+You can find this paper here: https://arxiv.org/abs/2008.00528.
+
+Please cite this paper as:
+
+@article{2008.00528,
+
+author = {Yujie He and Changhong Fu and Fuling Lin and Yiming Li and Peng Lu},
+
+title = {Towards Robust Visual Tracking for Unmanned Aerial Vehicle with Tri-Attentional Correlation Filters},
+
+year = {2020},
+
+journal = {arXiv:2008.00528}
+
+}
+
 ### Abstract 
 
 >Object tracking has been broadly applied in unmanned aerial vehicle (UAV) tasks in recent years. How-ever, existing algorithms still face difficulties such as partial occlusion, clutter background, and other challenging visual factors. Inspired by the cutting-edge attention mechanisms, a new visual tracking framework leveraging multi-level visual attention to make full use of the information during tracking. Three primary attention, i.e., contextual attention, dimensional attention, and spatiotemporal attention, are integrated into the training and detection stages of correlation filter-based tracking pipeline. Therefore, the proposed tracker is equipped with robust discriminative power against challenging factors while maintains high operational efficiency in UAV scenarios. Quantitative and qualitative experiments on two well-known benchmark with 173 challenging UAV video sequences demonstrate the effectiveness of the proposed framework. The proposed tracking algorithm compares favorably against state-of-the-art methods, yielding 4.8% relative gain in UAVDT and 8.2% relative gain in UAV123@10fps against the baseline tracker while operating at the speed of ∼28 frames per second
+
 
 ### Running instructions
 
